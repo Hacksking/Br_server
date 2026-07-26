@@ -58,6 +58,19 @@ const writeDB = (db) => {
     fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
 };
 
+// ---------- Generic Helpers ----------
+
+const getCollection = (name) => {
+    const db = readDB();
+    return db[name] || [];
+};
+
+const saveCollection = (name, data) => {
+    const db = readDB();
+    db[name] = data;
+    writeDB(db);
+};
+
 if (!fs.existsSync(DB_FILE)) {
     writeDB({
         users: [],
@@ -246,6 +259,260 @@ app.get("/api/products", (req, res) => {
     }
 
     res.json(products);
+
+});
+// ===================================================
+// DATABASE
+// ===================================================
+
+// View complete database
+app.get("/api/db", (req, res) => {
+    res.json(readDB());
+});
+
+// Replace entire database
+app.put("/api/db", (req, res) => {
+    writeDB(req.body);
+    res.json({
+        success: true,
+        message: "Database updated"
+    });
+});
+
+
+// ===================================================
+// USERS CRUD
+// ===================================================
+
+// Get all users
+app.get("/api/users", (req, res) => {
+    res.json(readDB().users);
+});
+
+// Get one user
+app.get("/api/users/:id", (req, res) => {
+
+    const user = readDB().users.find(
+        u => u.id === req.params.id
+    );
+
+    if (!user)
+        return res.status(404).json({
+            success: false
+        });
+
+    res.json(user);
+
+});
+
+// Add user
+app.post("/api/users", (req, res) => {
+
+    const db = readDB();
+
+    const user = {
+        id: Date.now().toString(),
+        ...req.body
+    };
+
+    db.users.push(user);
+
+    writeDB(db);
+
+    res.json(user);
+
+});
+
+// Update user
+app.put("/api/users/:id", (req, res) => {
+
+    const db = readDB();
+
+    const index = db.users.findIndex(
+        u => u.id === req.params.id
+    );
+
+    if (index == -1)
+        return res.status(404).json({
+            success: false
+        });
+
+    db.users[index] = {
+        ...db.users[index],
+        ...req.body
+    };
+
+    writeDB(db);
+
+    res.json(db.users[index]);
+
+});
+
+// Delete user
+app.delete("/api/users/:id", (req, res) => {
+
+    const db = readDB();
+
+    db.users = db.users.filter(
+        u => u.id !== req.params.id
+    );
+
+    writeDB(db);
+
+    res.json({
+        success: true
+    });
+
+});
+
+
+// ===================================================
+// PRODUCTS CRUD
+// ===================================================
+
+// Get one product
+app.get("/api/products/:id", (req, res) => {
+
+    const product = readDB().products.find(
+        p => p.id === req.params.id
+    );
+
+    if (!product)
+        return res.status(404).json({
+            success: false
+        });
+
+    res.json(product);
+
+});
+
+// Add product
+app.post("/api/products", (req, res) => {
+
+    const db = readDB();
+
+    const product = {
+        id: Date.now().toString(),
+        ...req.body
+    };
+
+    db.products.push(product);
+
+    writeDB(db);
+
+    res.json(product);
+
+});
+
+// Update product
+app.put("/api/products/:id", (req, res) => {
+
+    const db = readDB();
+
+    const index = db.products.findIndex(
+        p => p.id === req.params.id
+    );
+
+    if (index == -1)
+        return res.status(404).json({
+            success: false
+        });
+
+    db.products[index] = {
+        ...db.products[index],
+        ...req.body
+    };
+
+    writeDB(db);
+
+    res.json(db.products[index]);
+
+});
+
+// Delete product
+app.delete("/api/products/:id", (req, res) => {
+
+    const db = readDB();
+
+    db.products = db.products.filter(
+        p => p.id !== req.params.id
+    );
+
+    writeDB(db);
+
+    res.json({
+        success: true
+    });
+
+});
+
+
+// ===================================================
+// INQUIRIES CRUD
+// ===================================================
+
+// Get inquiries
+app.get("/api/inquiries", (req, res) => {
+
+    res.json(readDB().inquiries);
+
+});
+
+// Get one inquiry
+app.get("/api/inquiries/:id", (req, res) => {
+
+    const inquiry = readDB().inquiries.find(
+        i => i.id === req.params.id
+    );
+
+    if (!inquiry)
+        return res.status(404).json({
+            success: false
+        });
+
+    res.json(inquiry);
+
+});
+
+// Update inquiry
+app.put("/api/inquiries/:id", (req, res) => {
+
+    const db = readDB();
+
+    const index = db.inquiries.findIndex(
+        i => i.id === req.params.id
+    );
+
+    if (index == -1)
+        return res.status(404).json({
+            success: false
+        });
+
+    db.inquiries[index] = {
+        ...db.inquiries[index],
+        ...req.body
+    };
+
+    writeDB(db);
+
+    res.json(db.inquiries[index]);
+
+});
+
+// Delete inquiry
+app.delete("/api/inquiries/:id", (req, res) => {
+
+    const db = readDB();
+
+    db.inquiries = db.inquiries.filter(
+        i => i.id !== req.params.id
+    );
+
+    writeDB(db);
+
+    res.json({
+        success: true
+    });
 
 });
 
