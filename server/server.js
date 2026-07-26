@@ -1,158 +1,260 @@
-const express = require('express');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
-const fs = require('fs');
-const path = require('path');
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DB_FILE = path.join(__dirname, 'db.json');
+const DB_FILE = path.join(__dirname, "db.json");
 
-app.use(cors());
 app.use(express.json());
-app.use(cookieParser());
-// Serve static files from the parent directory (HTML, CSS, JS)
-app.use(express.static(path.join(__dirname, '../')));
 
-// Helper to read DB
+// Manual CORS (No cors package)
+app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+    if (req.method === "OPTIONS") {
+        return res.sendStatus(200);
+    }
+
+    next();
+});
+
+// Simple token parser (No cookie-parser package)
+app.use((req, res, next) => {
+    req.cookies = {};
+
+    const cookie = req.headers.cookie;
+    if (cookie) {
+        cookie.split(";").forEach(item => {
+            const parts = item.split("=");
+            if (parts.length === 2) {
+                req.cookies[parts[0].trim()] = decodeURIComponent(parts[1]);
+            }
+        });
+    }
+
+    next();
+});
+
+// Static Files
+app.use(express.static(path.join(__dirname, "../")));
+
+// ---------- Database ----------
 const readDB = () => {
-  try {
-    const data = fs.readFileSync(DB_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (err) {
-    return { users: [], inquiries: [], products: [] };
-  }
+    try {
+        return JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
+    } catch {
+        return {
+            users: [],
+            inquiries: [],
+            products: []
+        };
+    }
 };
 
-// Helper to write DB
-const writeDB = (data) => {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
+const writeDB = (db) => {
+    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
 };
 
-const ensureDBFile = () => {
-  if (!fs.existsSync(DB_FILE)) {
-    writeDB({ users: [], inquiries: [], products: [] });
-  }
-};
+if (!fs.existsSync(DB_FILE)) {
+    writeDB({
+        users: [],
+        inquiries: [],
+        products: []
+    });
+}
 
-ensureDBFile();
+// ---------- Signup ----------
+app.post("/api/signup", (req, res) => {
 
-// API: Signup
-app.post('/api/signup', (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) {
-    return res.status(400).json({ error: 'Name, email, and password are required' });
-  }
+    const { name, email, password } = req.body;
 
-  const db = readDB();
-  if (db.users.find(u => u.email === email)) {
-    return res.status(400).json({ error: 'Email already exists' });
-  }
+    if (!name || !email || !password)
+        return res.status(400).json({ error: "All fields required" });
 
-  const newUser = { id: Date.now().toString(), name, email, password, role: 'user' };
-  db.users.push(newUser);
-  writeDB(db);
+    const db = readDB();
 
-  res.cookie('auth_token', newUser.id, { httpOnly: true });
-  res.json({ message: 'Signup successful', user: { name: newUser.name, email: newUser.email, role: newUser.role } });
+    if (db.users.find(u => u.email === email))
+        return res.status(400).json({ error: "Email already exists" });
+
+    const user = {
+        id: Date.now().toString(),
+        name,
+        email,
+        password,
+        role: "user"
+    };
+
+    db.users.push(user);
+    writeDB(db);
+
+    res.setHeader(
+        "Set-Cookie",
+        `auth_token=${user.id}; HttpOnly; Path=/`
+    );
+
+    res.json({
+        message: "Signup successful",
+        user
+    });
+
 });
 
-// API: Inquiry submission
-app.post('/api/inquiries', (req, res) => {
-  const { name, email, phone, type, message } = req.body;
-  if (!name || !email || !message) {
-    return res.status(400).json({ error: 'Name, email, and message are required.' });
-  }
+// ---------- Login ----------
+app.post("/api/login", (req, res) => {
 
-  const db = readDB();
-  const inquiry = {
-    id: Date.now().toString(),
-    name,
-    email,
-    phone: phone || '',
-    type: type || 'general',
-    message,
-    date: new Date().toISOString(),
-  };
+    const { email, password } = req.body;
 
-  db.inquiries.push(inquiry);
-  writeDB(db);
+    const db = readDB();
 
-  res.json({ message: 'Inquiry submitted successfully', inquiry });
+    const user = db.users.find(
+        u => u.email === email && u.password === password
+    );
+
+    if (!user)
+        return res.status(401).json({
+            error: "Invalid credentials"
+        });
+
+    res.setHeader(
+        "Set-Cookie",
+        `auth_token=${user.id}; HttpOnly; Path=/`
+    );
+
+    res.json({
+        message: "Login successful",
+        user
+    });
+
 });
 
-// API: Login
-app.post('/api/login', (req, res) => {
-  const { email, password } = req.body;
-  const db = readDB();
-  const user = db.users.find(u => u.email === email && u.password === password);
+// ---------- Logout ----------
+app.post("/api/logout", (req, res) => {
 
-  if (!user) {
-    return res.status(401).json({ error: 'Invalid email or password' });
-  }
+    res.setHeader(
+        "Set-Cookie",
+        "auth_token=; Max-Age=0; Path=/"
+    );
 
-  res.cookie('auth_token', user.id, { httpOnly: true });
-  res.json({ message: 'Login successful', user: { name: user.name, email: user.email, role: user.role } });
+    res.json({
+        message: "Logout successful"
+    });
+
 });
 
-// API: Logout
-app.post('/api/logout', (req, res) => {
-  res.clearCookie('auth_token');
-  res.json({ message: 'Logout successful' });
+// ---------- Current User ----------
+app.get("/api/me", (req, res) => {
+
+    const token = req.cookies.auth_token;
+
+    if (!token)
+        return res.status(401).json({
+            error: "Not authenticated"
+        });
+
+    const db = readDB();
+
+    const user = db.users.find(
+        u => u.id === token
+    );
+
+    if (!user)
+        return res.status(401).json({
+            error: "User not found"
+        });
+
+    res.json({
+        user
+    });
+
 });
 
-// API: Check Auth
-app.get('/api/me', (req, res) => {
-  const token = req.cookies.auth_token;
-  if (!token) return res.status(401).json({ error: 'Not authenticated' });
-  
-  const db = readDB();
-  const user = db.users.find(u => u.id === token);
-  if (!user) return res.status(401).json({ error: 'User not found' });
+// ---------- Inquiry ----------
+app.post("/api/inquiries", (req, res) => {
 
-  res.json({ user: { name: user.name, email: user.email, role: user.role } });
+    const { name, email, phone, type, message } = req.body;
+
+    if (!name || !email || !message)
+        return res.status(400).json({
+            error: "Required fields missing"
+        });
+
+    const db = readDB();
+
+    const inquiry = {
+        id: Date.now().toString(),
+        name,
+        email,
+        phone: phone || "",
+        type: type || "general",
+        message,
+        date: new Date().toISOString()
+    };
+
+    db.inquiries.push(inquiry);
+
+    writeDB(db);
+
+    res.json({
+        message: "Inquiry submitted",
+        inquiry
+    });
+
 });
 
-// API: Admin Data
-app.get('/api/admin/data', (req, res) => {
-  const token = req.cookies.auth_token;
-  if (!token) return res.status(401).json({ error: 'Not authenticated' });
-  
-  const db = readDB();
-  const user = db.users.find(u => u.id === token);
-  
-  if (!user || user.role !== 'admin') {
-    return res.status(403).json({ error: 'Unauthorized: Admin access required' });
-  }
+// ---------- Admin ----------
+app.get("/api/admin/data", (req, res) => {
 
-  res.json({ users: db.users, inquiries: db.inquiries });
+    const token = req.cookies.auth_token;
+
+    if (!token)
+        return res.status(401).json({
+            error: "Unauthorized"
+        });
+
+    const db = readDB();
+
+    const admin = db.users.find(
+        u => u.id === token && u.role === "admin"
+    );
+
+    if (!admin)
+        return res.status(403).json({
+            error: "Admin only"
+        });
+
+    res.json({
+        users: db.users,
+        inquiries: db.inquiries
+    });
+
 });
 
-// API: Get Products
-app.get('/api/products', (req, res) => {
-  const type = req.query.type; // e.g., 'gold', 'diamond', 'silver', 'bridal'
-  const db = readDB();
-  let products = db.products || [];
-  if (type) {
-    products = products.filter(p => p.type === type);
-  }
-  res.json(products);
+// ---------- Products ----------
+app.get("/api/products", (req, res) => {
+
+    const db = readDB();
+
+    let products = db.products || [];
+
+    if (req.query.type) {
+        products = products.filter(
+            p => p.type === req.query.type
+        );
+    }
+
+    res.json(products);
+
 });
 
-// Fallback for HTML pages
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../index.html'));
+// ---------- HTML ----------
+app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../index.html"));
 });
 
-const server = app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
-
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`Port ${PORT} is already in use. Stop the running process or set PORT to a different value.`);
-  } else {
-    console.error(err);
-  }
-  process.exit(1);
+// ---------- Server ----------
+app.listen(PORT, () => {
+    console.log("Server running on port", PORT);
 });
