@@ -1,0 +1,146 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "Admin User",
+      "email": "admin@brjewellers.com",
+      "password": "br@1122",
+      "role": "admin"
+    },
+    {
+      "id": "1784974934438",
+      "name": "varun",
+      "email": "arm@gmail.com",
+      "password": "varun@2005",
+      "role": "user"
+    },
+    {
+      "id": "1785039667819",
+      "name": "varun",
+      "email": "gggg@gmail.com",
+      "password": "gggg@gggg",
+      "role": "user"
+    }
+  ],
+  "inquiries": [
+    {
+      "id": "1785039510910",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "+919999999999",
+      "type": "custom",
+      "message": "This is a inquiry test.",
+      "date": "2026-07-26T04:18:30.913Z"
+    },
+    {
+      "id": "1785039621799",
+      "name": "VARUN PERFECT MEDIA",
+      "email": "vpm.media.business@gmail.com",
+      "phone": "1111111111",
+      "type": "bridal",
+      "message": "fdd",
+      "date": "2026-07-26T04:20:21.799Z"
+    },
+    {
+      "id": "1785040324714",
+      "name": "gayu",
+      "email": "gayu@gmail.com",
+      "phone": "9414176614",
+      "type": "price",
+      "message": "halla",
+      "date": "2026-07-26T04:32:04.714Z"
+    }
+  ],
+  "products": [
+    {
+      "id": "g1",
+      "type": "gold",
+      "category": "necklace",
+      "title": "Kundan Necklace Set",
+      "image": "assets/images/gold.png",
+      "badge": "Bestseller",
+      "desc": "Necklace · 22kt Gold"
+    },
+    {
+      "id": "g2",
+      "type": "gold",
+      "category": "bangle",
+      "title": "Heritage Bangle Set",
+      "image": "assets/images/gold.png",
+      "badge": "New",
+      "desc": "Bangles · 22kt Gold"
+    },
+    {
+      "id": "g3",
+      "type": "gold",
+      "category": "ring",
+      "title": "Temple Design Ring",
+      "image": "assets/images/gold.png",
+      "badge": "",
+      "desc": "Ring · 22kt Gold"
+    },
+    {
+      "id": "g4",
+      "type": "gold",
+      "category": "earring",
+      "title": "Jhumka Drop Earrings",
+      "image": "assets/images/gold.png",
+      "badge": "Trending",
+      "desc": "Earrings · 22kt Gold"
+    },
+    {
+      "id": "d1",
+      "type": "diamond",
+      "category": "ring",
+      "title": "Solitaire Engagement Ring",
+      "image": "assets/images/diamond.png",
+      "badge": "Bestseller",
+      "desc": "Ring · 18kt Gold"
+    },
+    {
+      "id": "d2",
+      "type": "diamond",
+      "category": "necklace",
+      "title": "Eternity Diamond Necklace",
+      "image": "assets/images/diamond.png",
+      "badge": "New",
+      "desc": "Necklace · 18kt White Gold"
+    },
+    {
+      "id": "s1",
+      "type": "silver",
+      "category": "necklace",
+      "title": "Oxidized Choker",
+      "image": "assets/images/silver.png",
+      "badge": "Popular",
+      "desc": "Necklace · 925 Sterling Silver"
+    },
+    {
+      "id": "s2",
+      "type": "silver",
+      "category": "earring",
+      "title": "Tribal Silver Jhumka",
+      "image": "assets/images/silver.png",
+      "badge": "",
+      "desc": "Earrings · 925 Sterling Silver"
+    },
+    {
+      "id": "b1",
+      "type": "bridal",
+      "category": "necklace",
+      "title": "Maharani Bridal Set",
+      "image": "assets/images/bridal.png",
+      "badge": "Signature",
+      "desc": "Bridal Set · 22kt Gold + Polki"
+    },
+    {
+      "id": "b2",
+      "type": "bridal",
+      "category": "bangle",
+      "title": "Bridal Chura Set",
+      "image": "assets/images/bridal.png",
+      "badge": "",
+      "desc": "Bangles · Bridal Collection"
+    }
+  ]
+}
